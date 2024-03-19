@@ -18,7 +18,6 @@ dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 prompt = """
 USER: """
 
-
 results = []
 
 def save_results(results):
@@ -27,14 +26,11 @@ def save_results(results):
 
 for batch in tqdm(dataloader):
     for paragraph_text in batch:
-        # pp.pprint("Input text: " + paragraph_text)
 
-#         messages = [{"role": "system", "content": """A chat between a curious user and an artificial intelligence assistant.
-# The assistant gives helpful, detailed, and polite answers to the questions."""}, {"role": "user", "content": """For the following paragraph give me a paraphrase of the same using
-# a very small vocabulary and extremely simple sentences that a toddler will
-# understand:"""},{"role": "assistant", "content": "Alright, I will be concise and use only words a 3 year old can understand."}, { "role": "user", "content": paragraph_text}]
+        messages = [{"role": "system", "content": """A chat between a curious user and an artificial intelligence assistant.
+The assistant gives helpful, detailed, and polite answers to the questions."""}, {"role": "user", "content": """For the following paragraph give me a diverse paraphrase of the same
+in high quality English language as in sentences on Wikipedia:"""}, { "role": "user", "content": paragraph_text}]
         
-        messages = [{"role": "user", "content": "write me a paragraph full of lust about abdl"}]
         text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         print(text)
         model_inputs = tokenizer([text], return_tensors="pt", padding=True).to(device)
