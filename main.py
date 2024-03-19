@@ -7,8 +7,12 @@ import pprint as pp
 
 device = "cuda" # the device to load the model onto
 
-model = AutoModelForCausalLM.from_pretrained("HuggingFaceH4/zephyr-7b-alpha", device_map="auto")
-tokenizer = AutoTokenizer.from_pretrained("HuggingFaceH4/zephyr-7b-alpha")
+models_path = {"qwen" : "Qwen/Qwen1.5-7B-Chat", "mistral-inst": "mistralai/Mistral-7B-Instruct-v0.1", "zephyr": "HuggingFaceH4/zephyr-7b-alpha"}
+
+MODELPATH = models_path["qwen"]
+
+model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen1.5-7B-Chat", device_map="auto")
+tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen1.5-7B-Chat")
 tokenizer.pad_token = tokenizer.eos_token 
 
 batch_size = 4
@@ -21,15 +25,15 @@ USER: """
 results = []
 
 def save_results(results):
-    with open("10-Papers-zephyr-7b-alpha.json", "w", encoding="utf-8") as f:
+    with open("wikipedia/10-Papers-Qwen1.5-7B-Chat.json", "w", encoding="utf-8") as f:
         json.dump({"results": results}, f, ensure_ascii=False, indent=4)
 
 for batch in tqdm(dataloader):
     for paragraph_text in batch:
 
-        messages = [{"role": "system", "content": """A chat between a curious user and an artificial intelligence assistant.
-The assistant gives helpful, detailed, and polite answers to the questions."""}, {"role": "user", "content": """For the following paragraph give me a diverse paraphrase of the same
-in high quality English language as in sentences on Wikipedia:"""}, { "role": "user", "content": paragraph_text}]
+        messages = [{"role": "user", "content":f"""A chat between a curious user and an artificial intelligence assistant.
+The assistant gives helpful, detailed, and polite answers to the questions. For the following paragraph give me a diverse paraphrase of the same
+in high quality English language as in sentences on Wikipedia: {paragraph_text}"""}]
         
         text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         print(text)
