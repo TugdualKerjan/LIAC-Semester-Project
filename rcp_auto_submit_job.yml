@@ -1,0 +1,50 @@
+apiVersion: run.ai/v1
+kind: RunaiJob
+metadata:
+  name: rephrasetest6 # MUST BE SAME NAME of the "release" label under spec>templace>label bellow in order to get logs into the Run:AI dashboard
+  labels:
+    user: kerjan
+spec:
+  template:
+    metadata:
+      labels:
+        user: kerjan # User e.g. firstname.lastname
+        release: rephrasetest6 # MUST BE SAME NAME of your pod "name" specify in the metadata above in order to get logs into the Run:AI dashboard
+    spec:
+      hostIPC: true
+      schedulerName: runai-scheduler
+      restartPolicy: Never
+      containers:
+      - name: rcp
+        image: registry.rcp.epfl.ch/liac-public/users:kerjan-project-1006-1003
+        workingDir : /home/kerjan/PDFsToRephrased
+        command: ["/bin/bash"]
+        args:
+        - "-c"
+        - "echo;nvidia-smi;source /home/kerjan/miniconda3/bin/activate hurst;sleep 1m;python main.py;sleep 30m"
+        env:
+          - name: YOURPATH
+            value: "YOURPATH"
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+          - name: folder0
+            mountPath: /home/kerjan/.local
+          - name: folder1
+            mountPath: /home/kerjan/miniconda3
+          - name: folder2
+            mountPath: /home/kerjan/PDFsToRephrased
+      volumes:
+        - name: folder0
+          nfs:
+            path: /home/kerjan/.local
+            server: 128.178.38.25
+        - name: folder1
+          nfs:
+            path: /home/kerjan/miniconda3
+            server: 128.178.38.25
+        - name: folder2
+          nfs:
+            path: /home/kerjan/PDFsToRephrased
+            server: 128.178.38.25
