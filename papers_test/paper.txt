@@ -1,0 +1,491 @@
+Fractal Patterns May Unravel the Intelligence in Next-Token Prediction
+per-byte (BPB). Specifically, we introduce a new metric
+averaging H with 1/BPB and show that using it to predict
+downstream performance can increase the adjusted R2 from
+approximately 0.65 when using solely BPB, to over 0.86
+with the new metric. We do not observe improvements when
+predicting rankings, however.
+Statement of Contribution. In summary, we:
+1. highlight how the fractal structure of language can
+offer a unique perspective on the intelligent behavior
+exhibited by LLMs, and provide a precise formalism
+to quantify properties, such as long-range dependence.
+2. establish that language is self-similar and long-range
+dependent. We provide concrete estimates in language
+of the three parameters: the self-similarity (H ¨older) ex-
+ponent, the Hurst parameter, and the fractal dimension.
+We also estimate the related Joseph exponent.
+3. carry out a comparative study across different model
+architectures and scales, and different domains, such
+as ArXiv, GitHub, and Wikipedia, among others.
+4. connect fractal patterns with learning. Notably, we
+show that a “median” Hurst exponent (defined in Sec-
+tion 3) improves upon perplexity-based bits-per-byte
+(BPB) in predicting downstream performance.
+2. Fractal Structure of Language
+2.1. Preliminaries
+Suppose we have a discrete-time, stationary stochastic pro-
+cess (xt)t∈N, with E[xt] = 0 and E[x2
+t ] = 1. We will refer
+to (xt)t∈N as the increment process to distinguish it from the
+integral process (Xt)t∈N defined by Xt = Pt
+k=0 xk. While
+(xt)t∈N and (Xt)t∈N are merely different representations of
+the same data, it is useful to keep both representations in
+mind. For example, self-similarity is typically studied in
+the context of integral processes whereas long-range depen-
+dence (LRD) is defined on increment processes.
+In the literature, it is not uncommon to mistakenly equate pa-
+rameters that are generally different. For example, the Hurst
+parameter has had many different definitions in the past that
+were not equivalent, and Mandelbrot himself had cautioned
+against this (Mandelbrot, 2002). The reason behind this is
+because different parameters can agree in the idealized frac-
+tional Brownian motion setting, leading some researchers
+to equate them in general (Watkins, 2019). We will keep
+the self-similarity exponent S and the Hurst parameter H
+separate in our discussion.
+Experimental Setup. In order to establish self-similarity
+and LRD in language, we convert texts into sequences of
+bits using a large language model (LLM). Specifically, we
+use PaLM2-L (Unicorn) (Anil et al., 2023b) to calculate the
+probability of the next token wt conditioned on its entire pre-
+fix w[t−1] = (w0, w1, . . . , wt−1). By the chain rule (Cover,
+1999), the corresponding number of bits assigned to wt is
+zt = − log p(wt|w[t−1]). Unlike in prior works, which rely
+on simplifications such as by substituting a word with its
+length (Ausloos, 2012) or by focusing on the recurrence of
+a single word (Najafi & Darooneh, 2015; Altmann et al.,
+2012), we use the LLM to approximate the full joint dis-
+tribution of language. We carry out these calculations for
+prefixes of up to 2048 tokens (≈ 8 pages of text). Since
+language is a stochastic process, the sequence of bits of each
+token conditioned on its past converges asymptotically to
+the average number of bits required to encode the entire
+sequence (Cover, 1999). Hence, a suitable normalization,
+such bits-per-byte (BPB), results in a standardized descrip-
+tion of text, consistent across tokenizers. BPB is a widely
+used as a tokenizer-agnostic metric to compare language
+modeling performance, e.g. for The Pile (Gao et al., 2020).
+Besides PaLM2, we also experiment and report on various
+model sizes of PaLM (Chowdhery et al., 2022) and decoder-
+only T5 (Raffel et al., 2019). Namely, we report results for
+models: PaLM2 XXS (Gecko), XS (Otter), S (Bison), M,
+and L (Unicorn); PaLM 8B, 62B, 540B; and decoder-only
+T5.1.1 at Base (110M), Large (341M), XL (1.2B), and XXL
+(5B) sizes. For PaLM and PaLM2, we use the checkpoints
+pretrained in Chowdhery et al. (2022) and Anil et al. (2023b).
+All T5.1.1 decoder baselines, on the other hand, are trained
+with a casual language modeling objective for 262B tokens
+of C4 (Raffel et al., 2019). More details on how we train
+our T5.1.1 baselines can be found in Appendix A.
+To rely on LLM for such analysis, it must provide proba-
+bility scores that are reasonably well-calibrated. Generally,
+LLMs are known to produce calibrated probability scores
+at the token level (Kadavath et al., 2022). In Figure 3, we
+reconfirm this by comparing the logits, − log p(word), pre-
+dicted by one of the small language models we use in our
+study (PaLM-8B) with the actual log probabilities derived
+from the Google Web Trillion Word Corpus (Brants & Franz,
+2006) based on word frequencies. We use histogram binning
+(by grouping similar logits together) and plot their averaged
+actual log probabilities, similar to how the expected calibra-
+tion error (ECE) is calculated (Guo et al., 2017). Notably,
+we find a strong agreement for the most frequently occurring
+words, i.e., when the word probability exceeds p ≫ 10−9.
+Once zt is computed for a document, we construct the incre-
+ment process (xt)t∈N by normalizing zt to have a zero-mean
+and unit variance. The integral process (Xt)t∈N is calcu-
+lated based on (xt)t∈N, as described earlier and depicted in
+Figure 1 (top). Normalizing bits (to have zero mean and
+unit variance) models language as a random walk. It is a
+3
+Fractal Patterns May Unravel the Intelligence in Next-Token Prediction
+Figure 2. Peak probability pϵ(τ ) is plotted against the granularity level τ (see Section 2.2). We observe a power law pϵ(τ ) ∼ τ −S in all
+domains, indicating a self-similar structure, with a median self-similarity exponent of S = 0.59 ± 0.08.0 10 20 30
+Predicted logit
+0
+10
+20
+30
+Actual log-probability
+Figure 3. Comparison of PaLM-8B’s logits with actual log-
+probabilities. We observe a substantial agreement except for ex-
+ceedingly uncommon words with a probability < 10−9. This is
+consistent with reported findings that LLMs produce calibrated
+probability scores for tokens; e.g. (Kadavath et al., 2022).
+standard approach used extensively in the literature in vari-
+ous contexts, such as in DNA sequences (Peng et al., 1992;
+Roche et al., 2003; Montemurro & Pury, 2002; Kokol &
+Podgorelec, 2000; Schenkel et al., 1993).
+For analysis, we use The Pile validation split (Gao et al.,
+2020), consisting of 22 subdomains such as Wikipedia and
+GitHub. We restrict analysis to sufficiently-long documents
+of length > 4K tokens and use the first 2K tokens only, to
+sidestep potential effects of the finite length of documents
+and the model context. To mitigate noise, only domains with
+> 1K documents are compared; we report results for them
+separately and their median. We use bootstrapping (Efron
+& Tibshirani, 1994) to estimate the error margin.
+Notation. We write f (x) ∼ xc if f (x) = xcL(x) for
+some slowly-varying function L; i.e. L(tx)/L(x) → 1
+as x → ∞ for all t > 0. Examples of slowly varying
+functions are constants L(x) = c and L(x) = log x. When
+f (x) ∼ xc, we will abuse terminology slightly by referring
+to f (x) as a power law function.
+2.2. Self-similarity exponent
+An integral process is said to be self-similar if it ex-
+hibits statistical self-similarity. More precisely, (Xt)t∈N
+is self-similar if (Xτ t)t∈N is distributionally equivalent to
+(τ S Xt)t∈N for some exponent S. Thus, scaling of time is
+equivalent to an appropriate scaling of space. We will refer
+to τ as the granularity level and to the exponent S as the
+self-similarity exponent. It is worth noting that S is also
+called the H ¨older exponent (Watkins, 2019). Many time se-
+ries in nature exhibit self-similar structures, such as human
+blood pressure and heart rate (Goldberger et al., 2002).
+One approach for calculating the self-similarity exponent S
+is as follows. First, fix ϵ ≪ 1 and denote the τ -increments
+by (Xt+τ − Xt)t∈N. These would correspond, for instance,
+to the number of bits used for clauses, sentences, paragraphs
+and longer texts as τ increases. In terms of the increment
+process (xt)t∈N, this corresponds to aggregating increments
+into “bursts”. Let pϵ(τ ) be the probability mass of the event
+{|Xt+τ − Xt| ≤ ϵ}t∈N. Then, S can be estimated by fitting
+a power law relation pϵ(τ ) ∼ τ −S (Watkins, 2019).
+Figure 2 (top) plots the probability pϵ(τ ) against τ when
+ϵ = 5 × 10−3 using PaLM2-L. We indeed observe a power
+law relation; i.e. linear in a log-log scale, with a median
+self-similarity exponent of S = 0.59 ± 0.08. Section 3
+shows that the median S is robust to the choice of the LLM.
+2.3. Hurst parameter
+The Hurst parameter H ∈ [0, 1] quantifies the degree of
+predictability or dependence over time (Hurst, 1951). It is
+calculated using the so-called rescaled-range (R/S) anal-
+ysis. Let (xt)t∈N be an increment process. For each
+n ∈ N, write yt = xt − 1
+t
+Pt
+k=0 xk and Yt = Pt
+k=0 yt.
+The range and scale are defined, respectively, as R(n) =
+maxt≤n Yt − mint≤n Yt and S(n) = σ ({xk}k≤n), where
+σ is the standard deviation. Then, the Hurst parameter H is
+4
+Fractal Patterns May Unravel the Intelligence in Next-Token Prediction
+Figure 4. Rescaled range R(n)/S(n) is plotted against the number of normalized bits n. We observe a power law R(n)/S(n) ∼ nH in
+all domains. When aggregating all datasets, H = 0.70 ± .01, indicating long-range dependence (LRD).
+estimated by fitting a power law relation R(n)/S(n) ∼ nH.
+As stated earlier, for completely random processes, such as a
+simple Brownian motion, it can be shown that H = 1/2. In
+addition, H > 1/2 implies dependence over time (Crovella
+& Bestavros, 1995; Willinger et al., 1995; Aref, 1998).
+Writing ρn = E[(xt+nxt] for the autocovariance function
+of the increment process (xt)t∈N, the Hurst parameter sat-
+isfies H = 1 − β/2 when ρn ∼ n−β as n → ∞ (Gneiting
+& Schlather, 2004; Crovella & Bestavros, 1995). Since in
+self-similar processes, H > 1/2 implies long-range depen-
+dence (LRD), LRD is equivalent to the condition that the
+autocovariances are not summable. In terms of the integral
+process, it can be shown that (Samorodnitsky, 2006):
+lim
+n→∞
+Var(Xn)
+n = 1 + 2
+∞X
+i=1
+ρi. (1)
+Hence, if H < 1/2, the auto-covariances are summable and
+Var(Xn) grows, at most, linearly fast on n. On the other
+hand, if the process has LRD, Var(Xn) grows superlinearly
+on n. In particular, using the Euler-Maclaurin summation
+formula (Apostol, 1999; Alabdulmohsin, 2018), one obtains
+Var(Xn) ∼ n2H if H > 1/2. Figure 4 plots the rescaled
+range R(n)/S(n) against n. We observe a power law rela-
+tion with a median Hurst parameter of H = 0.70 ± 0.09.
+2.4. Fractal dimension
+Broadly speaking, the fractal dimension of an object de-
+scribes its local complexity. For a geometric object Z, such
+as the Koch curve, let τ be a chosen scale (e.g. a short
+ruler for measuring lengths or a small square for areas). Let
+N (τ ) be the minimum number of objects of scale τ that
+cover Z. Then, the fractal dimension of Z, also called its
+Hausdorff dimension, is: D = − limτ →0
+n log N (τ )
+log τ
+o
+(Pil-
+grim & Taylor, 2018). For example, a line has a fractal
+dimension 1, in agreement with its topological dimension,
+because N (τ ) = C/τ for some constant C > 0.
+By convention, an object is referred to as “fractal” if D is
+different from its topological dimension. For example, the
+fractal dimension of the Koch curve is about 1.26 when
+its topological dimension is 1. Fractals explain some puz-
+zling observations, such as why estimates of the length
+of the coast of Britain varied significantly from one study
+to another, because lengths in fractals are scale-sensitive.
+Mandelbrot estimated the fractal dimension of the coast of
+Britain to be 1.25 (Mandelbrot, 1967).
+The definition above for the fractal dimension D applies
+to geometric shapes, but an analogous definition has been
+introduced for stochastic processes. Let (xt)t∈R be a sta-
+tionary process with autocovariance ρn. Then, its fractal
+dimension D is determined according to the local behavior
+of ρn at the vicinity of n = 0, by first normalizing (xt)t∈R
+to have a zero-mean and a unit variance, and modeling ρn
+using a power law ρn ∼ 1 − nα as n → 0+, for α ∈ (0, 2].
+Then, the fractal dimension D ∈ [1, 2] of (xt)t∈R is defined
+by D = 2 − α/2 (Gneiting & Schlather, 2004). A value
+D ≫ 1 indicates a significant fractal structure.
+It can be shown that D = 2−S, where S is the self-similarity
+exponent (Gneiting & Schlather, 2004). For language, this
+gives a median fractal dimension of D = 1.41 ± 0.08.
+2.5. Joseph effect
+Next, we examine another related parameter that is com-
+monly studied in self-similar processes. The motivation
+behind it comes from the fact that in processes with LRD,
+one often observes burstiness as shown in Figure 1; i.e. clus-
+ters over time in which the process fully resides on one side
+of the mean, before switching to the other. This is quite
+unlike random noise, for instance, where measurements are
+evenly distributed on both sides of the mean. The effect is of-
+ten referred to as the Joseph effect, named after the biblical
+story of the seven fat years and seven lean years (Willinger
+et al., 1995; Mandelbrot & Wallis, 1968; Watkins, 2019).
+5
+Fractal Patterns May Unravel the Intelligence in Next-Token Prediction
+OpenWeb GitHub FreeLaw PileCC Wiki PubMed Math ArXiv
+S 0.53 ± .05 0.60 ± .05 0.61 ± .05 0.56 ± .03 0.62 ± .02 0.60 ± .07 0.42 ± .03 0.70 ± .03
+H 0.68 ± .01 0.79 ± .01 0.68 ± .00 0.70 ± .00 0.74 ± .01 0.65 ± .00 0.50 ± .01 0.72 ± .01
+J 0.46 ± .01 0.49 ± .00 0.49 ± .00 0.50 ± .00 0.52 ± .00 0.44 ± .00 0.28 ± .00 0.49 ± .00
+Table 1. A comparison of the fractal parameters across 8 different domains with > 1000 documents each in The Pile benchmark (see
+Section 2.1 for selection criteria). DM-Mathematics is markedly different because each document consists of questions, with no LRD.
+T5-Decoder PaLM PaLM2
+110M 340M 1B 5B 8B 62B 540B XXS XS S M L
+S .58±.06 .60±.06 .60±.05 .58±.08 .60±.07 .62±.08 .64±.08 .59±.06 .57±.08 .56±.05 .59±.07 .60±.08
+H .64±.08 .64±.08 .64±.09 .64±.08 .66±.07 .68±.07 .68±.07 .66±.07 .66±.07 .67±.08 .68±.09 .69±.09
+J .44±.06 .44±.06 .44±.06 .44±.06 .47±.06 .47±.06 .48±.06 .47±.06 .47±.06 .48±.07 .48±.07 .49±.08
+Table 2. A comparison of the estimated median fractal parameters by various LLMs over the entire Pile validation split. Estimates are
+generally robust to the choice of the LLM, but the tiny variations in median H reflect improvements in the model quality. See Section 3.
+A common way to quantify the Joseph effect for integral
+processes (Xt)t∈N is as follows (Watkins, 2019). First, let
+στ be the standard deviation of the τ -increments Xt+τ −Xt.
+Then, fit a power law relation στ ∼ τ J. The exponent J
+here is called the Joseph exponent. In an idealized fractional
+Brownian motion, both J and the self-similarity exponent S
+coincide. Figure 5 provides the detailed empirical results.
+Overall, we obtain an estimate of J = 0.49 ± 0.08, which
+is intriguing because J = 0.5 corresponds to self-similar
+processes with independent increments.
+3. Analysis
+Comparative Analysis. Table 1 compares the estimated
+fractal parameters across different domains, such as ArXiv,
+Github and Wikipedia. In general, most domains share simi-
+lar self-similarity and Hurst exponents with a few exceptions.
+The first notable exception is DM-Mathematics, which has a
+Hurst parameter of about 0.5. To recall, a value of H = 0.5
+indicates that the data does not exhibit long-range depen-
+dence (LRD). Upon closer inspection, however, a value of
+H = 0.5 is not surprising for DM-Mathematics because its
+documents consist of independent mathematical questions
+as shown in Figure 7. The second notable observation is the
+relatively larger value of H = 0.79 in GitHub, indicating
+more structure in code. This is in agreement with earlier
+findings by Kokol & Podgorelec (2000) who estimated LRD
+in computer languages to be greater than in nature language.
+In Table 2, we compare the three fractal parameters S, H
+and J using different families of LLM and different model
+sizes. Overall, we observe that the estimated parameters are
+generally robust to the choice of the architecture.
+Downstream Performance. By definition, fractal param-
+eters are calculated on the sequence of log-perplexity scores
+after normalizing them to zero-mean and unit variance.
+Hence, they may offer an assessment of downstream perfor-
+mance that improves upon using a perplexity-based metric
+like bits-per-byte (BPB) alone.
+To test this hypothesis, we evaluate the 12 models in Ta-
+ble 2 on challenging downstream zero- and few-shot bench-
+marks focusing on language understanding and reasoning.
+We include results for 0-shot (0S) and 3-shot (3S) evalu-
+ation for BIG-Bench Hard tasks (Srivastava et al., 2022;
+Suzgun et al., 2022) reporting both direct and chain-of-
+thought (CoT) prompting results following Chung et al.
+(2022). In addition we report 0-shot and 5-shot (5S) MMLU
+(Hendrycks et al., 2020), and 8-shot (8S) GSM8K (Cobbe
+et al., 2021) with CoT. Raw accuracy is reported for all tasks.
+BBH and MMLU scores are averaged across all 21 tasks
+and 57 subjects, respectively. All prompt templates for our
+evaluation are taken from Chung et al. (2022); Longpre et al.
+(2023), which we refer the reader to for more details. We
+prompt all models using a 2048 context length. See Table 9
+of Appendix C for the full results.
+The first (surprising) observation is that the median Hurst
+parameter is itself strongly correlated with the BPB scores
+with an absolute Pearson correlation coefficient of 0.83, even
+though the Hurst exponent is calculated after normalizing
+all token losses to zero-mean and unit variance! Informally,
+this implies that second-order statistics on the sequence of
+token losses of a particular model can predict its mean!
+The self-similarity exponent, by contrast, has an absolute
+Pearson correlation of 0.23 with BPB.
+Figure 6 displays downstream performance against both the
+median Hurst exponent and the median BPB score, where
+median values are calculated on the 8 domains in The Pile
+benchmark listed in Table 1. In general, both the BPB score
+and the median Hurst are good predictors of downstream
+performance. However, we observe that improvements in
+BPB alone without impacting the median Hurst exponent
+do not directly translate into improvements downstream.
+6
+Fractal Patterns May Unravel the Intelligence in Next-Token Prediction
+Figure 5. The standard deviation σ of the τ -increments Xt+τ − Xt is plotted against the scale τ . We, again, observe another power law
+relation σ ∼ τ J, with a Joseph exponent J = 0.49 ± 0.08.
+Magnitude Ranking
+BPB H HB BPB HB
+0S BBH Direct 0.785 0.841 0.883 0.958 0.958
+0S MMLU 0.653 0.831 0.825 0.769 0.769
+0S BBH+MMLU 0.685 0.849 0.852 0.930 0.930
+3S BBH Direct 0.767 0.895 0.926 1.000 1.000
+3S BBH CoT 0.881 0.892 0.979 1.000 1.000
+5S MMLU 0.660 0.853 0.832 0.783 0.783
+8S GSM8K CoT 0.654 0.867 0.851 0.993 0.993
+FS BBH+MMLU+GSM8K 0.717 0.890 0.891 1.000 1.000
+Table 3. Adjusted R2, which measures the proportion of varia-
+tion in downstream performance (row) predictable by a linear
+regressor with the given input (column). The combined metric
+HB = 1/BPB + H predicts downstream performance better in
+all downstream metrics, compared to BPB alone. S and J do not
+yield such improvements (see Appendix C). For ranking, we report
+Spearman correlations, which suggest that BPB is sufficient.
+This is verified quantitatively in Table 3, which reports the
+adjusted R2 values – the proportion of variance in each
+downstream metric that can be predicted using BPB, H, or
+by combining them together into HB = 1/BPB + H, with
+BPB replaced with its reciprocal so that higher values are
+better. We observe that HB yields indeed a stronger pre-
+dictor of downstream performance. For ranking, however,
+BPB alone is sufficient. See Appendix C for similar analysis
+using the exponents S and J.
+Context Length at Training Time. Finally, self-
+similarity and long-range dependence point to an intriguing
+possibility: the importance of training the model with ex-
+tensive contexts in order to capture the fractal-nature of
+language, which may elevate the model’s capabilities re-
+gardless of the context length needed during inference. To
+test this hypothesis, we pretrain three decoder-only T5.1.1
+models with 1B parameters on SlimPajama-627B (Sobol-
+eva et al., 2023) for up to 100B tokens using three context
+2K 4K 8K
+0S BBH Direct 1.81 1.68 1.76
+0S MMLU 25.73 26.04 25.81
+0S BBH+MMLU 13.39 13.49 13.42
+3S BBH Direct 21.35 24.76 23.14
+3S BBH CoT 16.87 12.21 7.14
+5S MMLU 26.57 26.69 27.07
+8S GSM8K CoT 1.06 1.21 1.74
+FS BBH + MMLU+GSM8K 15.58 15.46 14.65
+Table 4. Downstream performance comparison for three decoder-
+only T5.1.1. models pretrained on 100B tokens with either 2K, 4K,
+or 8K context lengths.
+lengths: 2K, 4K and 8K, all observing the same number of
+tokens per batch. We use SlimPajama-627B instead of C4
+because most documents in C4 are short (≈ 94% of them
+are < 2K tokens in length). Refer to Appendix A for details.
+These models are, then, evaluated on the same downstream
+benchmarks listed in Figure 6 and Table 3. As shown in
+Table 4, however, we do not observe any improvements in
+performance with context length in this particular setup.
+4. Related Works
+The statistical attributes of human language have long
+piqued scholarly curiosity, such as One example is Zipf’s
+law, which Shannon leveraged to estimate the entropy of
+English to be around 1 bit per letter (Shannon, 1951), but his
+calculation did not consider second-order statistics. More
+recently, Eftekhari (2006) proposed a refinement to Zipf’s
+law, suggesting its application to letters rather than words.
+Another related result is Heap’s law, which states that the
+number of unique words in a document is a power law func-
+tion of the document’s length (Heaps, 1978). However, both
+Zipf’s and Heap’s laws are invariant to the semantic order-
+ing of text, so they do not capture important aspects, such as
+long-range dependence (LRD) (Najafi & Darooneh, 2015).
+Document I: What is the square root of 211269 to the
+nearest integer? 460. What is the square root of
+645374 to the nearest integer? 803...
+Document II: Suppose 5*l = r - 35, -2*r + 5*l - 15 =
+-70. Is r a multiple of 4? True. Suppose 2*l + 11 -
+1 = 0. Does 15 divide (-2)/l - 118/(-5)? False...
+Figure 7. Two examples of documents from the DM-Mathematics
+subset of The Pile benchmark (Gao et al., 2020). Each document
+comprises of multiple independent questions. The lack of LRD in
+this data is reflected in its Hurst parameter of H = 0.50 ± 0.01
+In terms of self-similarity in language, the Menzerath-
+Altmann law stipulates a self-similar behavior in the follow-
+ing sense: when the size of a language construct increases,
+the size of its constituents decreases, and this happens at all
+scales (Najafi & Darooneh, 2015; Andres, 2009). In Ausloos
+(2012), the authors model texts as a time series by replacing
+a word with its length. After that, they study the fractal
+behavior of language. However, replacing a word with its
+length is invalid because it is not translation-independent
+(i.e. one could map every word to an arbitrary token, in-
+cluding tokens of equal length). In our work, we model
+language as a time series of bits calculated from conditional
+entropies, reflecting the structure of the language itself.
+In Najafi & Darooneh (2015), the authors define a fractal
+dimension for each word. Informally, they examine the
+recurrence of a single, predetermined word in texts as an
+ON/OFF time series, similar to the approach used in Alt-
+mann et al. (2012). However, this is only applicable to
+individual words and cannot model higher-level clauses.
+For instance, it does not distinguish between the word “time”
+in the phrase “once upon a time” and the word “time” in
+“space and time.” Kokol & Podgorelec (2000) estimate LRD
+in natural language, and suggest that its LRD is close to that
+of pure noise! They conjecture this was due to the use of
+ASCII encoding. In computer languages, they observe LRD
+and suggest this is because computer languages are formal.
+Besides the above concerns in prior studies that examined
+the self-similar structure in language, another concern is that
+they sometimes give extremely large values of the fractal
+dimension, sometimes even exceeding 10 (Andres, 2009).
+Such values are difficult to interpret because classical defini-
+tions of the fractal dimension restrict its value to the range
+[1, 2] for time series. We do not observe such issues in our
+analysis. In our case, D = 1.41 ± 0.08.
+5. Concluding Remarks
+In this work, we highlight intriguing insights into the un-
+derlying fractal structure of language and how it may be
+interconnected with the intelligent behavior of LLMs. Our
+formalism quantifies properties of language that may have
+been suspected, but not previously formally shown. In par-
+ticular, the need in LLMs to balance between short- and
+long-term contexts is reflected in the self-similar structure
+of language, while long-range dependence is quantifiable
+using the Hurst parameter. For instance, the absence of LRD
+in DM-Mathematics is reflected in its Hurst parameter of
+H ≈ 0.5. Interestingly, the estimated median Hurst value
+of H = 0.70 ± 0.09 in language reflects an intriguing bal-
+ance between predictability and noise that is similar to many
+other phenomena, and combining both H with BPB together
+yields a stronger predictor of downstream performance. We
+carry out an extensive comparative analysis across different
+domains and model architectures, revealing that fractal pa-
+rameters are generally robust. We hope that future research
+can further probe into these fractal properties, unearthing
+deeper understandings of the relation between intelligence
+and language.
+8
+Fractal Patterns May Unravel the Intelligence in Next-Token Prediction
+6. Acknowledgement
+The authors would like to thank Justin Gilmer and Olivier
+Bousquet for their feedback on earlier drafts of this
+manuscript, and both Google Deepmind and Google Re-
+search teams at large for the insightful discussions and pro-
+viding a supportive research environment.
+7. Potential Broader Impact
+This paper presents work whose goal is to advance the field
+of Machine Learning. There are many potential societal
+consequences of our work, none which we feel must be
+specifically highlighted here.

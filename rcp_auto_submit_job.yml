@@ -1,7 +1,7 @@
 apiVersion: run.ai/v1
 kind: RunaiJob
 metadata:
-  name: rephrasetest6 # MUST BE SAME NAME of the "release" label under spec>templace>label bellow in order to get logs into the Run:AI dashboard
+  name: rephrasetitleszephyr # MUST BE SAME NAME of the "release" label under spec>templace>label bellow in order to get logs into the Run:AI dashboard
   labels:
     user: kerjan
 spec:
@@ -9,7 +9,7 @@ spec:
     metadata:
       labels:
         user: kerjan # User e.g. firstname.lastname
-        release: rephrasetest6 # MUST BE SAME NAME of your pod "name" specify in the metadata above in order to get logs into the Run:AI dashboard
+        release: rephrasetitleszephyr # MUST BE SAME NAME of your pod "name" specify in the metadata above in order to get logs into the Run:AI dashboard
     spec:
       hostIPC: true
       schedulerName: runai-scheduler
@@ -21,7 +21,7 @@ spec:
         command: ["/bin/bash"]
         args:
         - "-c"
-        - "echo;nvidia-smi;source /home/kerjan/miniconda3/bin/activate hurst;sleep 1m;python main.py;sleep 30m"
+        - "echo;nvidia-smi;source /home/kerjan/miniconda3/bin/activate hurst;python3 transformDataset.py"
         env:
           - name: YOURPATH
             value: "YOURPATH"
@@ -35,6 +35,8 @@ spec:
             mountPath: /home/kerjan/miniconda3
           - name: folder2
             mountPath: /home/kerjan/PDFsToRephrased
+          - name: folder3
+            mountPath: /home/kerjan/.cache/huggingface
       volumes:
         - name: folder0
           nfs:
@@ -47,4 +49,8 @@ spec:
         - name: folder2
           nfs:
             path: /home/kerjan/PDFsToRephrased
+            server: 128.178.38.25
+        - name: folder3
+          nfs:
+            path: /home/kerjan/.cache/huggingface
             server: 128.178.38.25

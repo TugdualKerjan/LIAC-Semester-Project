@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name of this job
-JOBNAME="rephrasetest6"
+JOBNAME="rephrasetitleszephyr"
 
 # Number of GPUs you want to use
 GPUNUM=1
@@ -22,6 +22,7 @@ MYFOLDER=()
 MYFOLDER+=("/home/kerjan/.local")    # folder 1, for python, whole path!!!
 MYFOLDER+=("/home/kerjan/miniconda3")    # folder 1, for python, whole path!!!
 MYFOLDER+=("/home/kerjan/PDFsToRephrased")    # folder 1, for python, whole path!!!
+MYFOLDER+=("/home/kerjan/.cache/huggingface")    # folder 1, for python, whole path!!!
 # MYFOLDER+=("/home/liac/software/vasp544/bin")  # folder 2, for additional software
 # MYFOLDER+=($JOBDIR)                  # folder 3, for code to run
 # You can add more folder in this way
@@ -30,7 +31,6 @@ MYFOLDER+=("/home/kerjan/PDFsToRephrased")    # folder 1, for python, whole path
 MYCOMMAND=(0)
 MYCOMMAND+=("nvidia-smi")       # Command 1
 MYCOMMAND+=("source /home/kerjan/miniconda3/bin/activate hurst")        # Command 2
-MYCOMMAND+=("sleep 1m")
-MYCOMMAND+=("python main.py")   # Command 3
-MYCOMMAND+=("sleep 30m")      # Command 4
+MYCOMMAND+=("python3 transformDataset.py")   # Command 3
+# MYCOMMAND+=("sleep 30m")      # Command 4
 # You can add more commands in this way
